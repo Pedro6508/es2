@@ -11,11 +11,22 @@ object IO {
     operator fun invoke(
         inputFileName: String,
         outputDirectoryName: String,
+        tag: String,
         block: (Command) -> String?,
     ) = exec(
         inputBufferedReader(inputFileName),
-        outputBufferedWriter(outputDirectoryName),
+        outputBufferedWriter("$outputDirectoryName-$tag"),
     ) { lines -> lines.mapNotNull(block) }
+
+    operator fun invoke(
+        inputFileName: String,
+        outputDirectoryName: String,
+        tag: String,
+        block: (Int, Command) -> String?,
+    ) = exec(
+        inputBufferedReader(inputFileName),
+        outputBufferedWriter("$outputDirectoryName-$tag"),
+    ) { lines -> lines.mapIndexedNotNull(block) }
 
     private fun exec(
         inputStream: BufferedReader,
