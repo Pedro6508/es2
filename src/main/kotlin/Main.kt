@@ -24,21 +24,25 @@ object Main {
             }
 
             "dev" -> {
-                println("WARNING: The output does not follow the expected format.")
+                println("WARNING: The output will not follow the expected format.")
                 val reference = OrderedFileMaintenance.JavaStdLib(TreeSet<Int>())
                 val homework = OrderedFileMaintenance.Homework(10)
 
                 IO(inputFileName, outputFileName, tag) { index, command ->
-                    val refResult = stateManager[reference](command)
-                    val hwResult = stateManager[homework](command)
-                    val result = refResult == hwResult
+                    val refResult = stateManager[reference](command) to reference.getElements()
+                    val hwResult = stateManager[homework](command) to homework.getElements()
+                    val result = hwResult.run { refResult.first == first && refResult.second == second.filterNotNull() }
 
                     """
                         | ----------------------------------------
                         | [Tag: $tag] Command #$index
                         | Operation: $command
-                        | Reference: $refResult
-                        | Homework: $hwResult
+                        | Reference:
+                        |   output: ${refResult.first}
+                        |   elements: ${refResult.second}
+                        | Homework: 
+                        |   output: ${hwResult.first}
+                        |   elements: ${hwResult.second}
                         | result: ${if (result) "OK" else "FAIL"}
                         | ----------------------------------------
                     """.replaceIndentByMargin(
