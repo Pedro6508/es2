@@ -17,6 +17,7 @@ val StateManagerJavaUtilsTreeSetImpl = StateManager<TreeSet<Int>, String?> { com
 
             result.let(Int::toString)
         }
+
         is Command.Show -> { state -> state.joinToString(" ") }
     }
 }
@@ -25,7 +26,14 @@ val OrderedFileMaintenanceStateManagerImpl = StateManager<OrderedFileMaintenance
     when (command) {
         is Command.Insert -> { state -> state.insert(command.number); null }
         is Command.Remove -> { state -> state.remove(command.number); null }
-        is Command.Successor -> { state -> state.next(command.number)?.toString() }
-        is Command.Show -> { state -> state.getElements().joinToString(" ") }
+        is Command.Successor -> { state ->
+            val result = state.next(command.number)
+
+            requireNotNull(result) { "No successor for ${command.number}" }
+
+            result.let(Int::toString)
+        }
+
+        is Command.Show -> { state -> state.getElements().filterNotNull().joinToString(" ") }
     }
 }
