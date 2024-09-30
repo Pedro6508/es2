@@ -1,20 +1,31 @@
 package ufc.comp.ed
 
-interface OrderedFileMaintenance {
+import java.util.*
+
+sealed interface OrderedFileMaintenance {
     fun insert(element: Int)
     fun remove(element: Int)
     fun next(element: Int): Int?
     fun getElements(): List<Int?>
-}
 
-fun OrderedFileMaintenance(capacity: Int): OrderedFileMaintenance =
-    object : OrderedFileMaintenance, MutableList<Int?> by mutableListOf<Int?>().apply({
-        repeat(capacity) { add(null) }
-    }) {
-        private val maxDensity = 0.75
-        private val minDensity = 0.25
+    class JavaStdLib(private val treeSet: TreeSet<Int>) : OrderedFileMaintenance {
+        override fun insert(element: Int) {
+            treeSet.add(element)
+        }
 
-        fun binarySearch(element: Int) = binarySearch(element, fromIndex = 0, toIndex = capacity - 1)
+        override fun remove(element: Int) {
+            treeSet.remove(element)
+        }
+
+        override fun next(element: Int): Int? = treeSet.higher(element)
+
+        override fun getElements(): List<Int?> = treeSet.toList()
+    }
+
+    class Homework(private val capacity: Int) : OrderedFileMaintenance,
+        MutableList<Int?> by mutableListOf<Int?>().apply({
+            repeat(capacity) { add(null) }
+        }) {
 
         override fun insert(element: Int) {
             val index = binarySearch(element)
@@ -27,6 +38,8 @@ fun OrderedFileMaintenance(capacity: Int): OrderedFileMaintenance =
                 redistribute(insertIndex, element)
             }
         }
+
+        override fun getElements(): List<Int?> = this.toList()
 
         // TODO: "Adjust this implementation"
         override fun remove(element: Int) {
@@ -41,6 +54,11 @@ fun OrderedFileMaintenance(capacity: Int): OrderedFileMaintenance =
             if (index >= 0) element
             else subList(-index - 1, size).firstOrNull { it != null }
         }
+
+        private val maxDensity = 0.75
+        private val minDensity = 0.25
+
+        private fun binarySearch(element: Int) = binarySearch(element, fromIndex = 0, toIndex = capacity - 1)
 
         private fun redistribute(insertIndex: Int, element: Int) {
             // Find the nearest empty spot within O(log n) range
@@ -74,5 +92,5 @@ fun OrderedFileMaintenance(capacity: Int): OrderedFileMaintenance =
             this.addAll(newElements)
         }
 
-        override fun getElements(): List<Int?> = this.toList()
     }
+}
