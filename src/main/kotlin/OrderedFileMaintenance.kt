@@ -22,55 +22,73 @@ sealed interface OrderedFileMaintenance {
         override fun getElements(): List<Int?> = treeSet.toList()
     }
 
-    class Homework(private val capacity: Int) : OrderedFileMaintenance,
-        MutableList<Int?> by mutableListOf<Int?>().apply({
-            repeat(capacity) { add(null) }
-        }) {
+    data class Homework(private var capacity: Int) : OrderedFileMaintenance {
+        private var elements = arrayOfNulls<Int?>(capacity)
 
         override fun insert(element: Int) {
             val index = binarySearch(element)
             if (index >= 0) return // Element already exists
 
             val insertIndex = -index - 1
-            if (this[insertIndex] == null) {
-                this[insertIndex] = element
+            if (elements[insertIndex] == null) {
+                elements[insertIndex] = element
             } else {
                 redistribute(insertIndex, element)
             }
         }
 
-        override fun getElements(): List<Int?> = this.toList()
+        override fun getElements(): List<Int?> = elements.toList()
 
-        // TODO: "Adjust this implementation"
+        // TODO: "Adjust elements implementation"
         override fun remove(element: Int) {
             val index = binarySearch(element)
             if (index < 0) return // Element does not exist
 
-            this[index] = null
+            elements[index] = null
         }
 
-        // TODO: "Adjust this implementation"
+        // TODO: "Adjust elements implementation"
         override fun next(element: Int): Int? = element.let(::binarySearch).let { index ->
             if (index >= 0) element
-            else subList(-index - 1, size).firstOrNull { it != null }
+            else {
+                val insertIndex = -index - 1
+                if (insertIndex < capacity) elements[insertIndex]
+                else null
+            }
         }
 
         private val maxDensity = 0.75
         private val minDensity = 0.25
 
-        private fun binarySearch(element: Int) = binarySearch(element, fromIndex = 0, toIndex = capacity - 1)
+        private fun binarySearch(element: Int): Int {
+            var low = 0
+            var high = capacity - 1
+
+            while (low <= high) {
+                val mid = (low + high) ushr 1
+                val midVal = elements[mid]
+
+                when {
+                    midVal == null -> high = mid - 1
+                    midVal < element -> low = mid + 1
+                    midVal > element -> high = mid - 1
+                    else -> return mid // element found
+                }
+            }
+            return -(low + 1) // element not found
+        }
 
         private fun redistribute(insertIndex: Int, element: Int) {
             // Find the nearest empty spot within O(log n) range
             var left = insertIndex
             var right = insertIndex
 
-            while (left >= 0 && this[left] != null) left--
-            while (right < this.size && this[right] != null) right++
+            while (left >= 0 && elements[left] != null) left--
+            while (right < capacity && elements[right] != null) right++
 
             when {
-                left >= 0 && this[left] == null -> this[left] = element
-                right < this.size && this[right] == null -> this[right] = element
+                left >= 0 && elements[left] == null -> elements[left] = element
+                right < capacity && elements[right] == null -> elements[right] = element
                 else -> {
                     // If no space found, perform table doubling and redistribute
                     tableDoubling()
@@ -80,16 +98,17 @@ sealed interface OrderedFileMaintenance {
         }
 
         private fun tableDoubling() {
-            val newElements = MutableList(this.size * 2) { null as Int? }
+            capacity *= 2
+
+            val newElements = MutableList(capacity) { null as Int? }
             var j = 0
-            for (i in this.indices)
-                if (this[i] != null) {
-                    newElements[j] = this[i]
+            for (i in elements.indices)
+                if (elements[i] != null) {
+                    newElements[j] = elements[i]
                     j++
                 }
 
-            this.clear()
-            this.addAll(newElements)
+            elements = elements.copyOf(capacity)
         }
 
     }
