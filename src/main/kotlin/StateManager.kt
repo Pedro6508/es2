@@ -20,3 +20,12 @@ val StateManagerJavaUtilsTreeSetImpl = StateManager<TreeSet<Int>, String?> { com
         is Command.Show -> { state -> state.joinToString(" ") }
     }
 }
+
+val OrderedFileMaintenanceStateManagerImpl = StateManager<OrderedFileMaintenance, String?> { command ->
+    when (command) {
+        is Command.Insert -> { state -> state.insert(command.number); null }
+        is Command.Remove -> { state -> state.remove(command.number); null }
+        is Command.Successor -> { state -> state.next(command.number)?.toString() }
+        is Command.Show -> { state -> state.getElements().joinToString(" ") }
+    }
+}
