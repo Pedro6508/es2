@@ -14,7 +14,7 @@ fun OrderedFileMaintenance(capacity: Int) = object : OrderedFileMaintenance {
     private val minDensity = 0.25
 
     override fun insert(element: Int) {
-        val index = elements.binarySearch(element)
+        val index = elements.binarySearch(element, fromIndex = 0, toIndex = capacity - 1)
         if (index >= 0) return // Element already exists
 
         val insertIndex = -index - 1
