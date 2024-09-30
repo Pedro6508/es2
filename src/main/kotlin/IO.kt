@@ -9,29 +9,13 @@ import kotlin.io.path.bufferedWriter
 
 object IO {
     operator fun invoke(
-        inputStream: BufferedReader,
-        outputStream: BufferedWriter,
-        block: (Sequence<Command>) -> Sequence<String>,
-    ) = exec(inputStream, outputStream, block)
-
-    operator fun invoke(
         inputFileName: String,
         outputDirectoryName: String,
-        orderedFileMaintenance: OrderedFileMaintenance,
+        block: (Command) -> String?,
     ) = exec(
         inputBufferedReader(inputFileName),
         outputBufferedWriter(outputDirectoryName),
-    ) { lines -> lines.mapNotNull(orderedFileMaintenance) }
-
-    operator fun invoke(
-        inputFileName: String,
-        outputDirectoryName: String,
-        block: (Sequence<Command>) -> Sequence<String>,
-    ) = inputBufferedReader(inputFileName).use { inputBuffer ->
-        outputBufferedWriter(outputDirectoryName).use { outputBuffer ->
-            exec(inputBuffer, outputBuffer, block)
-        }
-    }
+    ) { lines -> lines.mapNotNull(block) }
 
     private fun exec(
         inputStream: BufferedReader,
@@ -40,7 +24,7 @@ object IO {
     ) = inputStream.useLines { lines ->
         lines.map(Command.Companion::fromLine)
             .let(block)
-            .forEach(outputStream::appendLine)
+            .forEach(outputStream::appendLine); outputStream.close()
     }
 
     private val classLoader = javaClass.classLoader
@@ -59,7 +43,6 @@ object IO {
             dirRawPath
                 .let(::Path)
                 .let(Files::createDirectories)
-        }.plus("/$time").filterNot(":"::contains).let(::Path)
-        .let(Files::createFile)
-        .bufferedWriter()
+        }.plus("/$time").filterNot(":"::contains).plus(".txt").let(::Path)
+        .let(Files::createFile).bufferedWriter()
 }
