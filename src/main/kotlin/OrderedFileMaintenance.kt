@@ -30,11 +30,8 @@ sealed interface OrderedFileMaintenance {
             if (index >= 0) return // Element already exists
 
             val insertIndex = -index - 1
-            if (elements[insertIndex] == null) {
-                elements[insertIndex] = element
-            } else {
-                redistribute(insertIndex, element)
-            }
+
+            redistribute(insertIndex, element)
         }
 
         override fun getElements(): List<Int?> = elements.toList()
